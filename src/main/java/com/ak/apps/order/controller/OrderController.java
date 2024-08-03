@@ -3,7 +3,10 @@ package com.ak.apps.order.controller;
 import com.ak.apps.order.model.Item;
 import com.ak.apps.order.model.Order;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,11 +21,16 @@ import java.util.Optional;
 @RestController
 public class OrderController {
 
+    @Value("${catalog.server.url}")
+    private String catalogServiceUrl;
+
     @Autowired
     private RestTemplate restTemplate;
 
     private static final String SERVICE_NAME = "catalog-service";
-    private static final String ADDRESS_SERVICE_URL = "http://localhost:8082/catalog/item/";
+
+
+    private Logger logger = LoggerFactory.getLogger(OrderController.class);
 
     @CircuitBreaker(name = SERVICE_NAME, fallbackMethod = "fallbackMethod")
     @PostMapping("/order")
@@ -31,10 +39,11 @@ public class OrderController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        logger.info("The catalog service URL is : {}", catalogServiceUrl);
 
         int itemId = order.getId();
         ResponseEntity<List<Item>> exchange = restTemplate.exchange(
-                ADDRESS_SERVICE_URL+itemId,
+                catalogServiceUrl+itemId,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<Item>>() {
