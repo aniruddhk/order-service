@@ -3,6 +3,7 @@ package com.ak.apps.order.controller;
 import com.ak.apps.order.model.Item;
 import com.ak.apps.order.model.Order;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,30 @@ public class OrderController {
     @CircuitBreaker(name = SERVICE_NAME, fallbackMethod = "fallbackMethod")
     @PostMapping("/order")
     public ResponseEntity<String> order(@RequestBody Order order){
+        System.out.println("Inside order...");
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        logger.info("The catalog service URL is : {}", catalogServiceUrl);
+
+        int itemId = order.getId();
+        ResponseEntity<List<Item>> exchange = restTemplate.exchange(
+                catalogServiceUrl+itemId,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Item>>() {
+                });
+
+        String str = "Success";
+        ResponseEntity<String> response = new ResponseEntity<>(str, HttpStatus.OK);
+
+        return response;
+
+    }
+
+    @PostMapping("/order-trial")
+    @Retry(name = SERVICE_NAME, fallbackMethod = "fallbackMethod")
+    public ResponseEntity<String> order1(@RequestBody Order order){
         System.out.println("Inside order...");
 
         HttpHeaders headers = new HttpHeaders();

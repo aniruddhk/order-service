@@ -1,3 +1,5 @@
+server:
+  port: 8085
 catalog:
   server:
     url: http://localhost:8082
@@ -37,3 +39,16 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
         sliding-window-size: 10
         register-health-indicator: true
+        limit-for-period: 5
+        limit-refresh-period: 15s
+        timeout-duration: 10s
+  retry:
+    instances:
+      order-service:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - org.springframework.web.client.HttpServerErrorException
+        ignore-exceptions:
+          - org.springframework.web.client.ResourceAccessException
+
