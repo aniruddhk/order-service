@@ -28,6 +28,13 @@ management:
     circuitbreakers:
       enabled: true
 resilience4j:
+  ratelimiter:
+    instances:
+      catalog-service:
+        limitForPeriod: 1          # Max calls in a period
+        limitRefreshPeriod: 30s     # Time window
+        timeoutDuration: 500ms
+
   circuitbreaker:
     instances:
       order-service:
